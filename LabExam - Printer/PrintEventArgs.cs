@@ -1,21 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LabExam
 {
-    // Class for describing event of printing
+    /// <summary>
+    /// Class for describing event of printing
+    /// </summary>
     public sealed class PrintEventArgs : EventArgs
     {
-        private string printingArg;
+        private string name;
 
-        public PrintEventArgs(string arg)
+        private string model;
+
+        private string time;
+
+        /// <summary>
+        /// Constructor for printing event args
+        /// </summary>
+        /// <param name="printer">Printer that initiates event of printing</param>
+        public PrintEventArgs(Printer printer)
         {
-            this.printingArg = arg;
+            this.name = printer.Name;
+            this.model = printer.Model;
+            this.time = DateTime.Now.ToLongTimeString();
         }
 
-        public string PrintingArg => printingArg;
+        /// <summary>
+        /// Property for getting name of printer which starts printing
+        /// </summary>
+        public string PrinterName => this.name;
+
+        /// <summary>
+        /// Property for getting model of printer which starts printing
+        /// </summary>
+        public string PrinterModel => this.model;
+
+        /// <summary>
+        /// Property for getting time of printing
+        /// </summary>
+        public string TimeOfPrinting => this.time;
     }
 }

@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LabExam
 {
-    class Program
+    public class Program
     {
         [STAThread]
-        static void Main(string[] args)
-        {
-            
+        public static void Main(string[] args)
+        {            
             Console.WriteLine("Select your choice:");
             Console.WriteLine("1:Add new printer");
             Console.WriteLine("2:Print on Canon");
@@ -20,36 +15,36 @@ namespace LabExam
             var key = Console.ReadKey();
 
             if (key.Key == ConsoleKey.D1)
-            {
-                CreatePrinter();
+            {                
+                Console.WriteLine("Enter printer model");
+                string model = Console.ReadLine();
+                Console.WriteLine("Enter printer name");
+                string name = Console.ReadLine();
+                CreatePrinter(name, model);
             }
 
             if (key.Key == ConsoleKey.D2)
             {
-                Print(PrinterManager.Printers.Where(p=>p.Model=="Canon").First());
+                Print(PrinterManager.Manager.GetPrinterByModel("Canon"));
             }
 
             if (key.Key == ConsoleKey.D3)
             {
-                Print(PrinterManager.Printers.Where(p => p.Model == "Epson").First());
+                Print(PrinterManager.Manager.GetPrinterByModel("Epson"));
             }
 
             while (true)
             {
-                Print(PrinterManager.Printers.Where(p => p.Model == "Canon").First());
             }
         }
 
         private static void Print(Printer printer)
         {
-            ILogger standartLogger = new DefaultLogger();
-            PrinterManager.Print(printer, standartLogger);
-            standartLogger.Log($"Printed on {printer.Model} {printer.Name}");
+            PrinterManager.Manager.Logger = new DefaultLogger("log.txt");
+            PrinterManager.Manager.Print(printer);
+            PrinterManager.Manager.Logger.Log($"Printed on {printer.Model} {printer.Name}");
         }
-        
-        private static void CreatePrinter()
-        {
-            PrinterManager.Add();
-        }
+
+        private static void CreatePrinter(string name, string model) => PrinterManager.Manager.Add(PrinterFactory.CreateNewPrinter(name, model));
     }
 }

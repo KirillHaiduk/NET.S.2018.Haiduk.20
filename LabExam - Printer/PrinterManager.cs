@@ -6,55 +6,72 @@ using System.Windows.Forms;
 
 namespace LabExam
 {    
-    // Class is non-static for supporting events
-    public class PrinterManager
+    /// <summary>
+    /// Singleton class of Printer Manager
+    /// </summary>
+    public sealed class PrinterManager
     {
+        private static readonly PrinterManager ManagerInstance = new PrinterManager();
+
+        private readonly List<Printer> printerList = new List<Printer>();
+                
         static PrinterManager()
         {
-            Printers = new List<Printer>();
         }
 
-        public static List<Printer> Printers { get; set; }
-
-        public static void Add()
+        private PrinterManager()
         {
-            Console.WriteLine("Enter printer name");
-            string name = Console.ReadLine();
-            Console.WriteLine("Enter printer model");
-            string model = Console.ReadLine();
+        }
 
-                        
-            if (!Printers.Where(p => p.Name == name).Any())
+        public static PrinterManager Manager
+        {
+            get => ManagerInstance;
+        }      
+        
+        public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// Method for adding new printer in printer list
+        /// </summary>
+        public void Add(Printer printer)
+        {
+            if (printer is null)
             {
-                if (string.Compare(model, "Canon", StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    var p1 = new CanonPrinter(name, model);
-                    Printers.Add(p1);
-                    Console.WriteLine("Printer added");
-                }
-                else if (string.Compare(model, "Epson", StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    var p1 = new EpsonPrinter(name, model);
-                    Printers.Add(p1);
-                    Console.WriteLine("Printer added");
-                }
-                else
-                {
-                    Console.WriteLine("Unknown printer model");
-                }                 
+                throw new InvalidOperationException("Printer instance was not created");
+            }
+
+            if (Manager.printerList.Where(p => p.Name == printer.Name && p.Model == printer.Model).Any())
+            {
+                throw new InvalidOperationException("Printer was already added to list");
+            }
+            else
+            {
+                printerList.Add(printer);
+                printer.StartPrinting += (sender, args) => Logger.Log($"Printing started on printer {printer.Name} {printer.Model} on {args.TimeOfPrinting}");
+                printer.EndPrinting += (sender, args) => Logger.Log($"Printing ended on printer {printer.Name} {printer.Model} on {args.TimeOfPrinting}");
+
+                Logger.Log($"Printer {printer.Name} {printer.Model} added to list");
             }
         }
 
-        // One method for printing
-        public static void Print(Printer p1, ILogger logger)
+        /// <summary>
+        /// Method for printing using given printer
+        /// </summary>
+        /// <param name="printer">Given printer to print on</param>
+        /// <param name="logger">Instance of logger</param>
+        public void Print(Printer printer)
         {
-            if (Printers.Where(p => p.Model == p1.Model && p.Name == p1.Name).Any())
+            if (Manager.printerList.Where(p => p.Model == printer.Model && p.Name == printer.Name).Any())
             {
-                logger.Log("Print started");
+                Logger.Log("Printing started");
                 var o = new OpenFileDialog();
                 o.ShowDialog();
-                p1.Print(o.FileName);
-                logger.Log("Print finished");
+                using (var stream = new FileStream(o.FileName, FileMode.Open))
+                {
+                    printer.Print(stream);
+                }
+
+                Logger.Log("Printing finished");
             }
             else
             {
@@ -62,19 +79,22 @@ namespace LabExam
             }
         }
 
-        public void Register(Printer printer)
+        /// <summary>
+        /// Method for showing all printers in list by given model
+        /// </summary>
+        /// <param name="model">Given model of printer</param>
+        /// <returns>Sequence of printers of given model</returns>
+        public Printer GetPrinterByModel(string model)
         {
-            printer.Printing += StartPrinting;
-        }
-
-        public void Unregister(Printer printer)
-        {
-            printer.Printing -= StartPrinting;
-        }
-
-        public void StartPrinting(object sender, PrintEventArgs e)
-        {
-            Console.WriteLine($"Start printing, message: {e.PrintingArg}");
-        }
+            var printer = printerList.Where(p => p.Model.Equals(model, StringComparison.OrdinalIgnoreCase));
+            if (printer.Count() == 0)
+            {
+                throw new InvalidOperationException($"There is no {model} printers in manager list");
+            }
+            else
+            {
+                return printer.First();
+            }
+        }        
     }
 }
