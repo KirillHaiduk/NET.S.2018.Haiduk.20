@@ -15,7 +15,7 @@ namespace ConsoleUI
 
         public void Error(string message)
         {
-            Console.WriteLine("URL doesn't match the pattern");
+            Console.WriteLine(message + " URL doesn't match the pattern");
         }
 
         public void Fatal(string message)
