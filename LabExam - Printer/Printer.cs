@@ -7,8 +7,8 @@ namespace LabExam
     // Modified into abstract class for common method and properties
     public abstract class Printer : IEquatable<Printer>
     {
-        protected string name;
-        protected string model;
+        private string name;
+        private string model;
 
         /// <summary>
         /// Constructor for creating Printer instance

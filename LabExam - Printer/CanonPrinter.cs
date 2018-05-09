@@ -8,8 +8,13 @@ namespace LabExam
     /// </summary>
     internal class CanonPrinter : Printer
     {
+        private string name;
+
+        private string model;
+
         public CanonPrinter(string name, string model) : base(name, model)
         {
+            this.name = name;
             this.model = "Canon";
         }
 

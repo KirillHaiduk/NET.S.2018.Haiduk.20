@@ -6,7 +6,7 @@ namespace LabExam
     {
         [STAThread]
         public static void Main(string[] args)
-        {            
+        {
             Console.WriteLine("Select your choice:");
             Console.WriteLine("1:Add new printer");
             Console.WriteLine("2:Print on Canon");
@@ -21,6 +21,7 @@ namespace LabExam
                 Console.WriteLine("Enter printer name");
                 string name = Console.ReadLine();
                 CreatePrinter(name, model);
+                return;
             }
 
             if (key.Key == ConsoleKey.D2)
@@ -41,10 +42,15 @@ namespace LabExam
         private static void Print(Printer printer)
         {
             PrinterManager.Manager.Logger = new DefaultLogger("log.txt");
-            PrinterManager.Manager.Print(printer);
+            Console.WriteLine("Enter path of file to print: ");
+            PrinterManager.Manager.Print(printer, Console.ReadLine());
             PrinterManager.Manager.Logger.Log($"Printed on {printer.Model} {printer.Name}");
         }
 
-        private static void CreatePrinter(string name, string model) => PrinterManager.Manager.Add(PrinterFactory.CreateNewPrinter(name, model));
+        private static void CreatePrinter(string name, string model)
+        {
+            PrinterManager.Manager.Logger = new DefaultLogger("log.txt");
+            PrinterManager.Manager.Add(PrinterFactory.CreateNewPrinter(name, model));
+        }
     }
 }

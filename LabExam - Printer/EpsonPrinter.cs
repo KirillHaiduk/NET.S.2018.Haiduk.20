@@ -8,8 +8,13 @@ namespace LabExam
     /// </summary>
     internal class EpsonPrinter : Printer
     {
+        private string name;
+
+        private string model;
+
         public EpsonPrinter(string name, string model) : base(name, model)
-        {       
+        {
+            this.name = name;
             this.model = "Epson";
         }
 

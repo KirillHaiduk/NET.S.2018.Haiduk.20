@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace LabExam
-{    
+{
     /// <summary>
     /// Singleton class of Printer Manager
     /// </summary>
@@ -40,16 +39,15 @@ namespace LabExam
                 throw new InvalidOperationException("Printer instance was not created");
             }
 
-            if (Manager.printerList.Where(p => p.Name == printer.Name && p.Model == printer.Model).Any())
+            if (Manager.printerList.Contains(printer))
             {
                 throw new InvalidOperationException("Printer was already added to list");
             }
             else
-            {
-                printerList.Add(printer);
+            {                
                 printer.StartPrinting += (sender, args) => Logger.Log($"Printing started on printer {printer.Name} {printer.Model} on {args.TimeOfPrinting}");
                 printer.EndPrinting += (sender, args) => Logger.Log($"Printing ended on printer {printer.Name} {printer.Model} on {args.TimeOfPrinting}");
-
+                printerList.Add(printer);
                 Logger.Log($"Printer {printer.Name} {printer.Model} added to list");
             }
         }
@@ -59,14 +57,17 @@ namespace LabExam
         /// </summary>
         /// <param name="printer">Given printer to print on</param>
         /// <param name="logger">Instance of logger</param>
-        public void Print(Printer printer)
+        public void Print(Printer printer, string filePath)
         {
-            if (Manager.printerList.Where(p => p.Model == printer.Model && p.Name == printer.Name).Any())
+            if (string.IsNullOrEmpty(filePath))
             {
-                Logger.Log("Printing started");
-                var o = new OpenFileDialog();
-                o.ShowDialog();
-                using (var stream = new FileStream(o.FileName, FileMode.Open))
+                throw new ArgumentNullException(nameof(filePath));
+            }
+
+            if (Manager.printerList.Contains(printer))
+            {
+                Logger.Log("Printing started");                
+                using (var stream = new FileStream(filePath, FileMode.Open))
                 {
                     printer.Print(stream);
                 }
