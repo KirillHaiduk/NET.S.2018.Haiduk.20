@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
 using XMLTechnologies;
 using XMLTechnologies.Interfaces;
@@ -17,11 +13,30 @@ namespace ConsoleUI
 
             var mockStorage = Mock.Of<IStorage>(d => d.GetStoragePath() == @"E:\Converted.xml");
             
-            var mockLogger = Mock.Of<ILogger>();            
+            var mockLogger = Mock.Of<ILogger>();
 
-            var converter = new XmlConverter(mockSource, new UrlPatternValidator<string, Uri>(mockLogger), mockStorage);
-            
-            converter.ToXmlConvert();
+            var dataProvider = new UriStringDataProvider(mockSource.GetSource);
+
+            var converter = new XmlConverter(dataProvider, new UrlPatternValidator(mockLogger), mockStorage);
+
+            var validator = new UrlPatternValidator(mockLogger);
+
+            Console.WriteLine("Valid URLs from source:");
+            foreach (var url in validator.ValidUrls(dataProvider.GetData()))
+            {
+                Console.WriteLine(url);
+            }
+
+            Console.WriteLine("\nURLs divided on hosts and segments:");
+            foreach (var element in converter.XMLNodes())
+            {
+                Console.WriteLine(element.ToString());
+            }
+
+            Console.WriteLine("\nWriting URLs into XML document:");
+            converter.ToXmlProcess();
+            Console.WriteLine($"New XML document was created, see {mockStorage.GetStoragePath()}");
+            Console.ReadLine();
         }
     }
 }
