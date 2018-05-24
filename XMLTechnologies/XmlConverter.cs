@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
 using XMLTechnologies.Interfaces;
 
@@ -15,7 +12,7 @@ namespace XMLTechnologies
     {
         private IDataProvider<string> provider;
 
-        private IValidator<string, Uri> validator;
+        private IValidator<string, string> validator;
 
         private IStorage storage;
 
@@ -25,8 +22,8 @@ namespace XMLTechnologies
         /// <param name="provider">Instance which implements IDataProvider interface</param>
         /// <param name="validator">Instance which implements IValidator interface</param>
         /// <param name="storage">Instance which implements IStorage interface</param>
-        public XmlConverter(IDataProvider<string> provider, IValidator<string, Uri> validator, IStorage storage)
-        {               
+        public XmlConverter(IDataProvider<string> provider, IValidator<string, string> validator, IStorage storage)
+        {
             if (provider is null)
             {
                 throw new ArgumentNullException(nameof(provider));
@@ -50,17 +47,55 @@ namespace XMLTechnologies
         /// <summary>
         /// Converts URLs into XML representation and writes them in XML file
         /// </summary>
-        public void ToXmlConvert()
+        public void ToXmlProcess()
         {
-            var list = new List<XElement>();
-            foreach (var url in validator.ValidUrls(provider.GetData()))
+            var document = new XDocument();
+            var root = new XElement("urlAddresses");
+            root.Add(this.XMLNodes());
+            document.Add(root);
+            document.Save(storage.GetStoragePath());
+        }
+
+        /// <summary>
+        /// Converts given URLs into XML representation
+        /// </summary>
+        /// <returns>Sequence of XML nodes</returns>
+        public IEnumerable<XElement> XMLNodes()
+        {
+            foreach (var urlStr in validator.ValidUrls(provider.GetData()))
             {
-                var root = new XElement("urladress", url.AbsolutePath);
-                list.Add(root);
+                string fullUrl = urlStr.Substring(urlStr.IndexOf(':') + 3);
+                string hostStr = fullUrl.Substring(0, fullUrl.IndexOf('/'));
+                string[] segments = fullUrl.Substring(hostStr.Length).Split('/', '?');
+                XElement host = new XElement("host");
+                host.Add(new XAttribute("name", hostStr));
+
+                XElement uri = new XElement("uri");
+                XElement url = new XElement("urlAddress");
+                foreach (var s in this.Segments(segments))
+                {
+                    uri.Add(new XElement("segment", s));
+                }
+
+                url.Add(host);
+                url.Add(uri);
+                yield return url;
             }
-            
-            var doc = new XDocument(list);
-            doc.Save(storage.GetStoragePath());
-        }       
+        }
+
+        private IEnumerable<string> Segments(string[] input)
+        {
+            foreach (var segment in input)
+            {
+                if (string.IsNullOrWhiteSpace(segment))
+                {
+                    continue;
+                }
+                else
+                {
+                    yield return segment;
+                }
+            }
+        }
     }
 }
